@@ -11,6 +11,7 @@ public:
      OutputNeure();
      OutputNeure(int n);
     float input();
+
     float output();
 };
 
