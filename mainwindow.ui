@@ -23,32 +23,43 @@
      <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu">
+   <widget class="QMenu" name="Open">
     <property name="title">
-     <string>输出神经元</string>
+     <string>新建</string>
     </property>
-   </widget>
-   <widget class="QMenu" name="menu_2">
-    <property name="title">
-     <string>输出神经元</string>
+    <property name="toolTipsVisible">
+     <bool>false</bool>
     </property>
+    <addaction name="actionIneure"/>
+    <addaction name="separator"/>
+    <addaction name="actionHneure"/>
+    <addaction name="separator"/>
+    <addaction name="actionOneure"/>
    </widget>
-   <widget class="QMenu" name="menu_3">
-    <property name="title">
-     <string>隐层神经元</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menu_4">
+   <widget class="QMenu" name="Dele">
     <property name="title">
      <string>清空</string>
     </property>
    </widget>
-   <addaction name="menu"/>
-   <addaction name="menu_2"/>
-   <addaction name="menu_3"/>
-   <addaction name="menu_4"/>
+   <addaction name="Open"/>
+   <addaction name="Dele"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionIneure">
+   <property name="text">
+    <string>输入神经元</string>
+   </property>
+  </action>
+  <action name="actionHneure">
+   <property name="text">
+    <string>隐层神经元</string>
+   </property>
+  </action>
+  <action name="actionOneure">
+   <property name="text">
+    <string>输出神经元</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

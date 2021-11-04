@@ -1,17 +1,18 @@
 #ifndef NEURE_H
 #define NEURE_H
+#include<string>
+using namespace std;
 
-
-class neure
+class Neure
 {
 private:
-    float in,out;
     int key;
+    string kind;
+
 public:
-    neure();
-    neure(int n){key=n;};
-float input();
-float output();
+    Neure();
+    Neure(int n);
+    int getKey();
 };
 
 #endif // NEURE_H
