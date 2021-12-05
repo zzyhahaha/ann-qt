@@ -5,16 +5,27 @@
  class OutputNeure:Neure
 {
  private:
-     float in,out;
+     float in=0,out=0;
      int key;
-     int posx,posy;
+     int flag;
+     int posx=500,posy=100;
      string m="Outputneure";
 public:
     OutputNeure();
     OutputNeure(int n);
     float input();
     float output();
-    void Activation_Function(int flag); //激活函数
+    int getX();
+    int getY();
+    int getflag();
+    void setflag(int flag);
+    void setkey(int key);
+    int getkey();
+    void setin(float in);
+    void setout();
+    void setpos(int posx,int posy);
+
+   // void Activation_Function(int flag); //激活函数
 };
 
 #endif // OUTPUTNEURE_H

@@ -35,4 +35,35 @@ transport::transport(){
  void transport::setto(int key){
      this->to=key;
  }
+ int transport::getposx1(){
+     return this->posx1;
+ }
+ int transport::getposy1(){
+     return this->posy1;
+ }
+ int transport::getposx2(){
+     return this->posx2;
+ }
+ int transport::getposy2(){
+     return this->posy2;
+ }
+ void transport::SetposFrom(int posx1, int posy1){
+     this->posx1=posx1;
+     this->posy1=posy1;
+
+ }
+ void transport::SetposTo(int posx2, int posy2){
+     this->posx2=posx2;
+     this->posy2=posy2;
+ }
+ void transport::setkey(int key){
+     this->key=key;
+ }
+
+
+
+
+
+
+
 

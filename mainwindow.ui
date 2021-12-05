@@ -40,9 +40,17 @@
     <property name="title">
      <string>清空</string>
     </property>
+    <addaction name="actionclr"/>
+   </widget>
+   <widget class="QMenu" name="run">
+    <property name="title">
+     <string>运行</string>
+    </property>
+    <addaction name="actionrunc"/>
    </widget>
    <addaction name="Open"/>
    <addaction name="Dele"/>
+   <addaction name="run"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionIneure">
@@ -58,6 +66,16 @@
   <action name="actionOneure">
    <property name="text">
     <string>输出神经元</string>
+   </property>
+  </action>
+  <action name="actionclr">
+   <property name="text">
+    <string>clr</string>
+   </property>
+  </action>
+  <action name="actionrunc">
+   <property name="text">
+    <string>runc</string>
    </property>
   </action>
  </widget>

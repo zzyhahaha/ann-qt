@@ -10,6 +10,9 @@ CONFIG += c++11
 
 SOURCES += \
     adjacency_list.cpp \
+    dialog.cpp \
+    dialog2.cpp \
+    dialog3.cpp \
     hidden_layer.cpp \
     inputneure.cpp \
     main.cpp \
@@ -20,6 +23,9 @@ SOURCES += \
 
 HEADERS += \
     adjacency_list.h \
+    dialog.h \
+    dialog2.h \
+    dialog3.h \
     hidden_layer.h \
     inputneure.h \
     mainwindow.h \
@@ -28,6 +34,9 @@ HEADERS += \
     transport.h
 
 FORMS += \
+    dialog.ui \
+    dialog2.ui \
+    dialog3.ui \
     mainwindow.ui
 
 TRANSLATIONS += \

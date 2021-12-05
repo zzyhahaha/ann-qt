@@ -21,8 +21,9 @@ float InputNeure::getInput()
 void InputNeure::setInput(float in){
     this->in=in;
 }
-float InputNeure::output(float out){
-    this->out=this->in;
+
+float InputNeure::getoutput(){
+
     return this->out;
 }
 int InputNeure:: getx(){
@@ -30,4 +31,26 @@ int InputNeure:: getx(){
 }
 int InputNeure::gety(){
     return posy;
+}
+void InputNeure::setkey(int key){
+   this->key=key;
+}
+int InputNeure::getkey(){
+    return this->key;
+}
+int InputNeure::getflag(){
+    return this->flag;
+}
+
+void InputNeure::setflag(int flag){
+    this->flag=flag;
+
+}
+void InputNeure::setpos(int posx, int posy){
+    this->posx=posx;
+    this->posy=posy;
+
+}
+void InputNeure::setOutput(){
+    this->out=this->in;
 }

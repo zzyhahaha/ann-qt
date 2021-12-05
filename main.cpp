@@ -8,7 +8,7 @@
 #include <outputnerue.h>
 #include <transport.h>
 #include <QMouseEvent>
-int mark;   //负责给各个神经元标号
+
 
 
 int main(int argc, char *argv[])
