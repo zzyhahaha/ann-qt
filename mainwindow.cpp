@@ -86,9 +86,31 @@ MainWindow::MainWindow(QWidget *parent)
             it++;
         }
 
-
-
     });
+
+    connect(ui->actiondeletewire,&QAction::triggered,this,[=](){
+
+        deleteallkind=1;
+
+    });//删除线
+
+
+    connect(ui->actiondeletenode,&QAction::triggered,this,[=](){
+
+        deleteallkind=1;
+
+    });//删除节点
+
+
+    connect(ui->actionprintdata,&QAction::triggered,this,[=](){
+
+
+
+    });//打印数据
+
+
+
+
 }
 
 MainWindow::~MainWindow()
@@ -259,51 +281,88 @@ void MainWindow::mouseMoveEvent(QMouseEvent *ev){
 void MainWindow::mousePressEvent(QMouseEvent *ev){
     if(ev->buttons() == Qt::LeftButton){
         //输入端神经元位置改变
-        for(vector<InputNeure>::iterator it=Ineure.begin();it!=Ineure.end();){
+        for(int i=0;i<(int)Ineure.size();i++){
             if(Ineure.size()==0)
                 break;
 
             else{
-                if(ev->pos().x()>it->getx()-50 & ev->pos().x()<it->getx()+50 & ev->pos().y()<it->gety()+50 & ev->pos().y()>it->gety()-50){
-                    it->setflag(1);
+                if(ev->pos().x()>Ineure[i].getx()-50 & ev->pos().x()<Ineure[i].getx()+50 & ev->pos().y()<Ineure[i].gety()+50 & ev->pos().y()>Ineure[i].gety()-50){
+                    Ineure[i].setflag(1);
+                    if(deleteallkind==1)
+                    {
+                        a.delvertax(Ineure[i].getkey());
+                        Ineure.erase(Ineure.begin()+i);
+                        deleteallkind=0;
+                    }
                     break;
             }
                 else{
-                    it->setflag(0);
-                    it++;
+                    Ineure[i].setflag(0);
+
                 }
            }
 }
-       for(vector<hidden_layer>::iterator it=Hneure.begin();it!=Hneure.end();){
+       for(int i=0;i<(int)Hneure.size();i++){
            if(Hneure.size()==0)
                break;
            else{
-
-                if(ev->pos().x()>it->getX()-50 & ev->pos().x()<it->getX()+50 & ev->pos().y()<it->getY()+50 &ev->pos().y()>it->getY()-50){
-                    it->setflag(1);
+                if(ev->pos().x()>Hneure[i].getX()-50 & ev->pos().x()<Hneure[i].getX()+50 & ev->pos().y()<Hneure[i].getY()+50 &ev->pos().y()>Hneure[i].getY()-50){
+                    Hneure[i].setflag(1);
+                    if(deleteallkind==1)
+                    {
+                        a.delvertax(Hneure[i].getkey());
+                        Hneure.erase(Hneure.begin()+i);
+                        deleteallkind=0;
+                    }
                     break;
             }
                 else{
-                    it->setflag(0);
-                    it++;
+                    Hneure[i].setflag(0);
             }
           }
 }
-       for(vector<OutputNeure>::iterator it=Oneure.begin();it!=Oneure.end();)   {
+       for(int i=0;i<(int)Oneure.size();i++)   {
            if(Oneure.size()==0)
                break;
            else{
-                if(ev->pos().x()>it->getX()-50 & ev->pos().x()<it->getX()+50 & ev->pos().y()<it->getY()+50 &ev->pos().y()>it->getY()-50){
-                it->setflag(1);
+                if(ev->pos().x()>Oneure[i].getX()-50 & ev->pos().x()<Oneure[i].getX()+50 & ev->pos().y()<Oneure[i].getY()+50 &ev->pos().y()>Oneure[i].getY()-50){
+                Oneure[i].setflag(1);
+
+                if(deleteallkind==1)
+                {
+                    a.delvertax(Oneure[i].getkey());
+                    Oneure.erase(Oneure.begin()+i);
+                    deleteallkind=0;
+                }
+
                 break;
             }
                 else{
-                    it->setflag(0);
-                    it++;
+                    Oneure[i].setflag(0);
+
                 }
 
            }
         }
+/***************************************************删除线**************************************************/
+       for(int i=0;i<(int)tp.size();i++){
+           if(tp.size()==0)
+               break;
+           else{
+               if(ev->pos().x()>tp[i].getposx1() & ev->pos().x()<tp[i].getposx2()){
+                   float k=0.0,b=0.0;
+                   k=(tp[i].getposy1()-tp[i].getposy2())/(tp[i].getposx1()-tp[i].getposx2()*1.0);
+                   b=(tp[i].getposx2()*tp[i].getposy1()-tp[i].getposx1()*tp[i].getposy2())/(tp[i].getposx2()-tp[i].getposx1()*1.0);
+                          //显示设置权值----对话框2
+                   if(abs(ev->pos().y()-k*ev->pos().x()-b)<3 && deleteallkind==1){
+                            a.delEdge(tp[i]);
+                            deleteallkind=0;
+                            tp.erase(tp.begin()+i);
+                      }
+                  }
+             }
+       }
+
 }
     if(ev->button()==Qt::RightButton){
         //输入层线的起始位置

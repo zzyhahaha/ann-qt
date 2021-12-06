@@ -48,6 +48,7 @@ private:
 
     int  key=0;
     int transkey=0;
+    int deleteallkind=0;
 
     Adjacency_List a;//生成图
     vector<InputNeure> Ineure;

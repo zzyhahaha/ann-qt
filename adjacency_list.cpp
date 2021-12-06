@@ -66,15 +66,13 @@ void Adjacency_List::delEdge(transport t){
     }
 }
 /**************************删除存入VECTOR中的边************************/
-    for(vector<transport>::iterator iter=tr.begin();iter!=tr.end();){
-        if(iter->getkey() == t.getkey()){
-            tr.erase(iter);
+    for(int i=0;i<(int)tr.size();i++){
+        if(tr[i].getkey() == t.getkey()){
+            tr.erase(tr.begin()+i);
         }
-      else {
-             iter++;
-            }
       }
 
+    m--;
 }//删除边
 
 
@@ -89,15 +87,28 @@ void Adjacency_List:: addvertax(int key){
 }    //增加顶点
 
 void Adjacency_List::delvertax(int key){
+
     for(int i=0;i<(int)k.size();i++){
         for(int j=0;j<(int)k[i].size();j++){
-            if(k[i][j].key==key && j!=0){
+            if(k[i][j].key==key){
                 k[i].erase(k[i].begin()+j);
-                break;
+                for(int t=0;t<(int)tr.size();t++){
+                    if(tr[t].getfrom()==key)
+                    {
+                        delEdge(tr[t]);
+                    }
+                    else if(tr[t].getto()==key){
+                        tr.erase(tr.begin()+t);
+                    }
+
+                }
             }
         }
-    }
-    k[key].erase(k[key].begin(),k[key].end());
+    }   //删除k中的节点
+
+
+    n--;
+
 
 }    //删除顶点
 
@@ -203,7 +214,6 @@ void Adjacency_List::TopSort(){
 
             }
         }
-
 
 
 

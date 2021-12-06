@@ -48,9 +48,24 @@
     </property>
     <addaction name="actionrunc"/>
    </widget>
+   <widget class="QMenu" name="printdata">
+    <property name="title">
+     <string>导出数据</string>
+    </property>
+    <addaction name="actionprintdata"/>
+   </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>删除</string>
+    </property>
+    <addaction name="actiondeletewire"/>
+    <addaction name="actiondeletenode"/>
+   </widget>
    <addaction name="Open"/>
    <addaction name="Dele"/>
    <addaction name="run"/>
+   <addaction name="printdata"/>
+   <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionIneure">
@@ -70,12 +85,27 @@
   </action>
   <action name="actionclr">
    <property name="text">
-    <string>clr</string>
+    <string>清空</string>
    </property>
   </action>
   <action name="actionrunc">
    <property name="text">
-    <string>runc</string>
+    <string>运行</string>
+   </property>
+  </action>
+  <action name="actiondeletewire">
+   <property name="text">
+    <string>删除线</string>
+   </property>
+  </action>
+  <action name="actiondeletenode">
+   <property name="text">
+    <string>删除点</string>
+   </property>
+  </action>
+  <action name="actionprintdata">
+   <property name="text">
+    <string>输出txt</string>
    </property>
   </action>
  </widget>
