@@ -21,24 +21,20 @@ void Adjacency_List::addEdge(transport t){
     int count=0;
     t.setkey(m);
     tr.push_back(t);
-    temp.from=t.getfrom();
-    temp.to=t.getto();
-    temp.weight=t.getWeight();
     for(int i=0;i<(int)k.size();i++)
     {
-        for(int j=0;j<(int)k[i].size();j++)
-           {
-        if(k[i][j].key==t.getto())
+
+        if(k[i].key==t.getto())
         {
-            k[i][j].indegree++;
+            k[i].indegree++;
 
         }
-        }
+
         count++;
 
     }
-     qDebug()<<count<<"temp to:"<<temp.to;
-    k[temp.from].push_back(temp);
+
+
     m++;//边数加1
 
 }  //增加边
@@ -47,24 +43,14 @@ void Adjacency_List::delEdge(transport t){
 /****************删除链接的结点*********************/
     for(int i=0;i<(int)k.size();i++){
         /*将其所对应的下一个节点入度减1*/
-        for(int j=0;j<(int)k[i].size();j++){
-        if(k[i][j].key==t.getto()){
-            k[i][j].indegree--;
+
+        if(k[i].key==t.getto()){
+            k[i].indegree--;
             }
-        }
-    }
-        /*将其所在的行消除*/
-    for(int i=0;i<(int)k.size();i++)
-    {
-        for(int j=0;j<(int)k[i].size();j++)
-    {
-        if(k[i][j].key==t.getto()&& j!=0){
 
-            k[t.getfrom()].erase(k[i].begin()+j);
-
-        }
     }
-}
+
+
 /**************************删除存入VECTOR中的边************************/
     for(int i=0;i<(int)tr.size();i++){
         if(tr[i].getkey() == t.getkey()){
@@ -78,10 +64,8 @@ void Adjacency_List::delEdge(transport t){
 
 void Adjacency_List:: addvertax(int key){
     node temp;
-    vector<node>tempv;
     temp.key=key;
-    tempv.push_back(temp);
-    k.push_back(tempv);
+    k.push_back(temp);
     n++;//顶点数加1
 
 }    //增加顶点
@@ -89,9 +73,7 @@ void Adjacency_List:: addvertax(int key){
 void Adjacency_List::delvertax(int key){
 
     for(int i=0;i<(int)k.size();i++){
-        for(int j=0;j<(int)k[i].size();j++){
-            if(k[i][j].key==key){
-                k[i].erase(k[i].begin()+j);
+            if(k[i].key==key){
                 for(int t=0;t<(int)tr.size();t++){
                     if(tr[t].getfrom()==key)
                     {
@@ -100,13 +82,10 @@ void Adjacency_List::delvertax(int key){
                     else if(tr[t].getto()==key){
                         tr.erase(tr.begin()+t);
                     }
-
                 }
+                k.erase(k.begin()+i);
             }
-        }
     }   //删除k中的节点
-
-
     n--;
 
 
@@ -115,22 +94,28 @@ void Adjacency_List::delvertax(int key){
 
 void Adjacency_List::TopSort(){
     int cnt=0; //判断是否有环
-    vector<vector<node>>k2(k);
+    vector<node>k2(k);
     vector<transport>tr2(tr);
-
-
     queue<node> q;
     /*********找入度为0的点并将他们压入队列*********/
     for(int i=0;i<(int)k2.size();i++){
-        for(int j=0;j<(int)k2[i].size();j++){
-            if(k2[i][j].indegree==0)
+
+            if(k2[i].indegree==0)
             {
                 node temp;
-                temp=k2[i][j];
+                temp=k2[i];
                 q.push(temp);
-                qDebug()<<"qishi:"<<k2[i][j].key;
+                qDebug()<<"qishi:"<<k2[i].key<<i;
             }
-        }
+
+    }
+    for(int i=0;i<(int)k2.size();i++)
+    {
+        qDebug()<<"k2:"<<k2[i].key<<i;
+    }
+    for(int i=0;i<(int)k.size();i++)
+    {
+        qDebug()<<" k:"<<k[i].key<<i;
     }
 
     while(!q.empty()){
@@ -146,37 +131,32 @@ void Adjacency_List::TopSort(){
 
                 for(int i=0;i<(int)k2.size();i++){
 
-                    for(int j=0;j<(int)k2[i].size();j++){
-
-                        if(tr2[m].getto()==k2[i][j].key && ver.key!=k2[i][j].key)
+                        if(tr2[m].getto()==k2[i].key && ver.key!=k2[i].key)
 
                         {
-                            qDebug()<<"look"<<k2[i][j].in<<ver.out<<tr2[m].getWeight()<<ver.key<<tr2[m].getto()<<k2[i][j].key;
-                            k2[i][j].in=k2[i][j].in+(ver.out*tr2[m].getWeight());
-                            qDebug()<<"look2"<<k2[i][j].in;
+                            qDebug()<<"look"<<k2[i].in<<ver.out<<tr2[m].getWeight()<<ver.key<<tr2[m].getto()<<k2[i].key;
+                            k2[i].in=k2[i].in+(ver.out*tr2[m].getWeight());
+                            qDebug()<<"look2"<<k2[i].in;
                             tr2[m].setWeight(0);
                         }
 
                             /**************************隐层输入*********************/
                           for(int h=0;h<(int)hidden.size();h++)
                           {
-                              if(k2[i][j].key==hidden[h].getkey())
+                              if(k2[i].key==hidden[h].getkey())
                               {
-                                  hidden[h].setin(k2[i][j].in);
+                                  hidden[h].setin(k2[i].in);
                                   hidden[h].setout(hidden[h].Activation_Function(hidden[h].getjiflag()));
-                                  k2[i][j].out=hidden[h].Output();
-                                  qDebug()<<"yincengshuru:"<<hidden[h].Output()<<k2[i][j].key<<k2[i][j].out;
+                                  k2[i].out=hidden[h].Output();
+                                  qDebug()<<"yincengshuru:"<<hidden[h].Output()<<k2[i].key<<k2[i].out;
 
                               }
                           }
-
-
-                          /***************************输出层********************/
                           for(int o=0;o<(int)Outne.size();o++){
-                              if(k2[i][j].key==Outne[o].getkey())
+                              if(k2[i].key==Outne[o].getkey())
                               {
-                                  qDebug()<<"zaishuchu"<<k[i][j].key<<" "<<Outne[o].getkey()<<k2[i][j].in;
-                                  Outne[o].setin(k2[i][j].in);
+                                  qDebug()<<"zaishuchu"<<k[i].key<<" "<<Outne[o].getkey()<<k2[i].in;
+                                  Outne[o].setin(k2[i].in);
                                   Outne[o].setout();
                                   qDebug()<<"shuchujieguo"<<Outne[o].output();
 
@@ -184,54 +164,55 @@ void Adjacency_List::TopSort(){
                           }
 
 
-
-
-                        }
-
-                     }
-
-
-                tr2.erase(tr2.begin()+m);
+                          }
 
                 }
+
         }
 
 
 
+
+
+
      /***********************************删除入读为0的点*********************************/
-
-        for(int i=0;i<(int)k2.size();i++){
-            for(int j=0;j<(int)k2[i].size();j++){
-                if(k2[i][j].key==ver.key)
-                {
-                    k2[i].erase(k2[i].begin()+j);
-                    qDebug()<<"delete:"<<k2[i][j].key;
+        for(int i=0;i<(int)tr.size();i++){
+            if(tr[i].getfrom()==ver.key){
+                for(int j=0;j<(int)k2.size();j++){
+                    if(k2[j].key==tr[i].getto())
+                    {
+                        k2[j].indegree--;
+                    }
                 }
-                if(k2[i][j].key==ver.to)
-                {
-                    k2[i][j].indegree--;
-                }
-
             }
         }
 
 
 
+
+        for(int i=0;i<(int)k2.size();i++){
+
+                if(k2[i].key==ver.key)
+                {
+                    k2.erase(k2.begin()+i);
+                    qDebug()<<"delete:"<<k2[i].key;
+                }
+
+        }
 
 
 
 /*****************将入读为0的点压入队列*****************/
         for(int i=0;i<(int)k2.size();i++){
-            for(int j=0;j<(int)k2[i].size();j++){
-                if(k2[i][j].indegree==0)
+
+                if(k2[i].indegree==0)
                 {
                     node temp;
-                    temp=k2[i][j];
+                    temp=k2[i];
                     q.push(temp);
-                   qDebug()<< k2[i][j].key;
 
                 }
-            }
+
         }
 
     }//while
@@ -241,10 +222,14 @@ void Adjacency_List::TopSort(){
         qDebug()<<"Edge";
         qDebug()<<tr[i].getkey()<<"weight:"<<tr[i].getWeight()<<"from"<<tr[i].getfrom()<<"to:"<<tr[i].getto();
     }
+    for(int i=0;i<(int)Inputne.size();i++)
+    {
+        qDebug()<<"shuru"<<Inputne[i].getInput()<<Inputne[i].getoutput();
+    }
 
     for(int i=0;i<(int)Outne.size();i++)
     {
-        qDebug()<<"shuru";
+        qDebug()<<"shuchu";
         qDebug()<<Outne[i].input();
 
     }
@@ -331,7 +316,7 @@ void Adjacency_List::intransport(vector<transport>::iterator ittrans){
     for(int i=0;i<(int)tr.size();i++){
         if(ittrans->getkey()==tr[i].getkey()){
             tr[i].setWeight(ittrans->getWeight());
-
+            qDebug()<<"wangtulishe"<<tr[i].getWeight();
         }
     }
 
@@ -348,15 +333,14 @@ void Adjacency_List::inInput(vector<InputNeure>::iterator it){//it 这个是图�
             it1->setOutput();
             for(int i=0;i<(int)k.size();i++)//itk 是图node的游标
             {
-                for(int j=0;j<(int)k[i].size();j++)
-                {
-                    if(k[i][j].key==it1->getkey())
+
+                    if(k[i].key==it1->getkey())
                     {
-                        k[i][j].in=it1->getInput();
-                        k[i][j].out=k[i][j].in;
+                        k[i].in=it1->getInput();
+                        k[i].out=k[i].in;
 
                     }
-                }
+
             }
             break;
         }

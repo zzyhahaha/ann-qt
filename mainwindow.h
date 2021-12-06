@@ -17,6 +17,7 @@
 #include <ui_dialog2.h>
 #include <dialog3.h>
 #include <ui_dialog3.h>
+#include <QDir>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -38,6 +39,9 @@ public:
     void drawNeure();
     void drawTran();
     void drawtmp(transport tmp);
+    void delInputneure(InputNeure Ineure1);
+    void delhiddenneure(hidden_layer Hneure1);
+    void delOutputneure(OutputNeure Oneure1);
 
 private:
     Ui::MainWindow *ui;

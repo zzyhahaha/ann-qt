@@ -18,17 +18,15 @@ class Adjacency_List
 {
     struct node{
         float out=0;      // 单条边的输出
-        int to;
         int weight=0;
         int key;            //节点的标号
         int indegree=0;
-        int from;
         float in=0;
     };
 protected:
     int n=0, m=0 ;//n是节点数 m是边数
 
-    vector<vector<node>>k;
+    vector<node>k;
     vector<transport> tr;        //传输的边
     vector<hidden_layer> hidden; //隐层
     vector<InputNeure> Inputne;  //输入层

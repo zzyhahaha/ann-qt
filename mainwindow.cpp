@@ -7,6 +7,8 @@
 #include <QPainter>
 #include <QAction>
 #include <QToolBar>
+#include <QFile>
+#include <iostream>
 using namespace std;
 
 
@@ -104,7 +106,51 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->actionprintdata,&QAction::triggered,this,[=](){
 
+        QFile f("C:\\Users\\67495\\Desktop\\test.txt");
 
+        if(!f.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            cout << "Open failed." << endl;
+
+        }
+        QTextStream txtOutput(&f);
+        QString s1("Inputneure:");
+        txtOutput<<'\n';
+        txtOutput<<s1;
+        txtOutput<<"\n";
+        for(int i=0;i<(int)Ineure.size();i++){
+
+            txtOutput<<"神经元编号: "<<Ineure[i].getkey()<<"  输入: "<<Ineure[i].getInput()<<"  输出: "<<Ineure[i].getoutput();
+            txtOutput<<'\n';
+        }
+        txtOutput<<'\n';
+        QString s2("hidden_layer:");
+        txtOutput<<s2;
+        txtOutput<<"\n";
+        for(int i=0;i<(int)Hneure.size();i++){
+            txtOutput<<"神经元编号: "<<Hneure[i].getkey()<<"  输入: "<<Hneure[i].Input()<<"  输出: "<<Hneure[i].Output()<<"  阈值: "<<Hneure[i].getthr()<<"  激活函数编号: "<<Hneure[i].getjiflag();
+            txtOutput<<'\n';
+        }
+
+        QString s3("OutputNeure:");
+        txtOutput<<'\n';
+        txtOutput<<s3;
+        txtOutput<<'\n';
+        for(int i=0;i<(int)Oneure.size();i++){
+
+            txtOutput<<"神经元编号: "<<Oneure[i].getkey()<<"  输入: "<<Oneure[i].input()<<"  输出: "<<Oneure[i].output();
+            txtOutput<<'\n';
+        }
+        txtOutput<<'\n';
+        QString s4("wire:");
+        txtOutput<<s4;
+        txtOutput<<'\n';
+        for(int i=0;i<(int)tp.size();i++){
+
+            txtOutput<<"边的编号: "<<tp[i].getkey()<<"  边的权重: "<<tp[i].getWeight()<<"  from 神经元标号: "<<tp[i].getfrom()<<"  to 神经元标号: "<<tp[i].getto();
+            txtOutput<<"\n";
+        }
+        f.close();
 
     });//打印数据
 
@@ -292,6 +338,7 @@ void MainWindow::mousePressEvent(QMouseEvent *ev){
                     {
                         a.delvertax(Ineure[i].getkey());
                         Ineure.erase(Ineure.begin()+i);
+                        delInputneure(Ineure[i]);
                         deleteallkind=0;
                     }
                     break;
@@ -312,6 +359,7 @@ void MainWindow::mousePressEvent(QMouseEvent *ev){
                     {
                         a.delvertax(Hneure[i].getkey());
                         Hneure.erase(Hneure.begin()+i);
+                        delhiddenneure(Hneure[i]);
                         deleteallkind=0;
                     }
                     break;
@@ -332,6 +380,7 @@ void MainWindow::mousePressEvent(QMouseEvent *ev){
                 {
                     a.delvertax(Oneure[i].getkey());
                     Oneure.erase(Oneure.begin()+i);
+                    delOutputneure(Oneure[i]);
                     deleteallkind=0;
                 }
 
@@ -353,7 +402,6 @@ void MainWindow::mousePressEvent(QMouseEvent *ev){
                    float k=0.0,b=0.0;
                    k=(tp[i].getposy1()-tp[i].getposy2())/(tp[i].getposx1()-tp[i].getposx2()*1.0);
                    b=(tp[i].getposx2()*tp[i].getposy1()-tp[i].getposx1()*tp[i].getposy2())/(tp[i].getposx2()-tp[i].getposx1()*1.0);
-                          //显示设置权值----对话框2
                    if(abs(ev->pos().y()-k*ev->pos().x()-b)<3 && deleteallkind==1){
                             a.delEdge(tp[i]);
                             deleteallkind=0;
@@ -464,7 +512,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *ev){
                  in=s3.toFloat();
                  it->setInput(in);
                  a.inInput(it);
-                 //qDebug()<<it->getInput();
+
 
             }
             it++;
@@ -520,11 +568,40 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *ev){
 
     }
 
+}
+
+void MainWindow::delInputneure(InputNeure Ineure1){
+    for(int i=0;i<(int)tp.size();i++){
+        if(Ineure1.getkey()==tp[i].getfrom()){
+            tp.erase(tp.begin()+i);
+        }
+    }
+}
+
+void MainWindow::delhiddenneure(hidden_layer Hneure1){
+    for(int i=0;i<(int)tp.size();i++){
+        if(Hneure1.getkey()==tp[i].getfrom()){
+            tp.erase(tp.begin()+i);
+            qDebug()<<"tp-erase:"<<tp[i].getkey()<<tp[i].getfrom()<<tp[i].getto();
+        }
+    }
+    for(int i=0;i<(int)tp.size();i++){
+        if(Hneure1.getkey()==tp[i].getto()){
+            tp.erase(tp.begin()+i);
+            qDebug()<<"tp-erase:"<<tp[i].getkey()<<tp[i].getfrom()<<tp[i].getto();
+        }
+    }
 
 }
 
+void MainWindow::delOutputneure(OutputNeure Oneure1){
+    for(int i=0;i<(int)tp.size();i++){
+        if(Oneure1.getkey()==tp[i].getto()){
+            tp.erase(tp.begin()+i);
+        }
+    }
 
-
+}
 
 
 
