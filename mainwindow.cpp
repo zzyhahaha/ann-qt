@@ -574,6 +574,7 @@ void MainWindow::delInputneure(InputNeure Ineure1){
     for(int i=0;i<(int)tp.size();i++){
         if(Ineure1.getkey()==tp[i].getfrom()){
             tp.erase(tp.begin()+i);
+            i=0;
         }
     }
 }
@@ -583,12 +584,14 @@ void MainWindow::delhiddenneure(hidden_layer Hneure1){
         if(Hneure1.getkey()==tp[i].getfrom()){
             tp.erase(tp.begin()+i);
             qDebug()<<"tp-erase:"<<tp[i].getkey()<<tp[i].getfrom()<<tp[i].getto();
+            i=0;
         }
     }
     for(int i=0;i<(int)tp.size();i++){
         if(Hneure1.getkey()==tp[i].getto()){
             tp.erase(tp.begin()+i);
             qDebug()<<"tp-erase:"<<tp[i].getkey()<<tp[i].getfrom()<<tp[i].getto();
+            i=0;
         }
     }
 
@@ -598,6 +601,7 @@ void MainWindow::delOutputneure(OutputNeure Oneure1){
     for(int i=0;i<(int)tp.size();i++){
         if(Oneure1.getkey()==tp[i].getto()){
             tp.erase(tp.begin()+i);
+            i=0;
         }
     }
 

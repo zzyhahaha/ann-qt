@@ -56,9 +56,9 @@ private:
 
     Adjacency_List a;//生成图
     vector<InputNeure> Ineure;
-    vector<hidden_layer>Hneure;
-    vector<OutputNeure>Oneure;
-    vector<transport>tp;
+    vector<hidden_layer>Hneure;//图形界面
+    vector<OutputNeure>Oneure;//图形界面
+    vector<transport>tp;//图形界面
     transport tmp;  //设置线
 
 };

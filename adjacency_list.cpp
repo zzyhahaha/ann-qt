@@ -55,6 +55,7 @@ void Adjacency_List::delEdge(transport t){
     for(int i=0;i<(int)tr.size();i++){
         if(tr[i].getkey() == t.getkey()){
             tr.erase(tr.begin()+i);
+            i=0;
         }
       }
 
@@ -78,12 +79,15 @@ void Adjacency_List::delvertax(int key){
                     if(tr[t].getfrom()==key)
                     {
                         delEdge(tr[t]);
+                        t=0;
                     }
                     else if(tr[t].getto()==key){
                         tr.erase(tr.begin()+t);
+                        t=0;
                     }
                 }
                 k.erase(k.begin()+i);
+                i=0;
             }
     }   //删除k中的节点
     n--;
