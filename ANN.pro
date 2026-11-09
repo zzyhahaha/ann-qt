@@ -1,37 +1,31 @@
-QT       += core gui
+QT       += core gui widgets
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+# 用到了 QMouseEvent::position()、QStringConverter 等 Qt 6 接口
+lessThan(QT_MAJOR_VERSION, 6): error("需要 Qt 6（原项目用的是 Qt 6.1.3 MinGW 64-bit）")
 
-CONFIG += c++11
+CONFIG += c++17
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    adjacency_list.cpp \
     dialog.cpp \
     dialog2.cpp \
     dialog3.cpp \
-    hidden_layer.cpp \
-    inputneure.cpp \
     main.cpp \
     mainwindow.cpp \
-    neure.cpp \
-    outputneure.cpp \
-    transport.cpp
+    network.cpp \
+    networkcanvas.cpp
 
 HEADERS += \
-    adjacency_list.h \
     dialog.h \
     dialog2.h \
     dialog3.h \
-    hidden_layer.h \
-    inputneure.h \
     mainwindow.h \
-    neure.h \
-    outputneure.h \
-    transport.h
+    network.h \
+    networkcanvas.h \
+    numberedit.h
 
 FORMS += \
     dialog.ui \

@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# Qt Creator 本机配置和构建目录
+*.pro.user
+*.pro.user.*
+build*/
+docs/repro/orig/
+docs/repro/orig.tar
+docs/repro/out/

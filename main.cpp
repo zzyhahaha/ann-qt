@@ -3,13 +3,6 @@
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
-#include <hidden_layer.h>
-#include <inputneure.h>
-#include <outputnerue.h>
-#include <transport.h>
-#include <QMouseEvent>
-
-
 
 int main(int argc, char *argv[])
 {

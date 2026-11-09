@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>神经元</string>
+   <string>隐层神经元</string>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
@@ -98,8 +98,11 @@
       <height>18</height>
      </size>
     </property>
+    <property name="toolTip">
+     <string>总输入 &gt; 阈值 时输出 1，否则输出 0</string>
+    </property>
     <property name="text">
-     <string>激活函数2</string>
+     <string>2 阶跃</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="func1">
@@ -123,8 +126,11 @@
       <height>18</height>
      </size>
     </property>
+    <property name="toolTip">
+     <string>把 (总输入 − 阈值) 限制在 [-1, 1] 之间作为输出</string>
+    </property>
     <property name="text">
-     <string>激活函数1</string>
+     <string>1 线性</string>
     </property>
    </widget>
   </widget>
@@ -134,7 +140,7 @@
      <x>180</x>
      <y>60</y>
      <width>54</width>
-     <height>12</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
@@ -142,6 +148,9 @@
    </property>
   </widget>
   <widget class="QLineEdit" name="Yuzhi">
+   <property name="toolTip">
+    <string>隐层输出 = 激活函数(总输入 − 阈值)</string>
+   </property>
    <property name="geometry">
     <rect>
      <x>180</x>

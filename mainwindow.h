@@ -1,65 +1,42 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <cmath>
-#include<QMouseEvent>
 #include <QMainWindow>
-#include <inputneure.h>
-#include <hidden_layer.h>
-#include <outputneure.h>
-#include <transport.h>
-#include "inputneure.h"
-#include <vector>
-#include <adjacency_list.h>
-#include <dialog.h>
-#include <ui_dialog.h>
-#include <dialog2.h>
-#include <ui_dialog2.h>
-#include <dialog3.h>
-#include <ui_dialog3.h>
-#include <QDir>
+
+#include "network.h"
+
+class NetworkCanvas;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+// 主窗口：菜单、对话框、导出。画图和鼠标交互交给 NetworkCanvas，数据只有 m_net 一份。
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    explicit MainWindow(QWidget *parent = nullptr);
+    ~MainWindow() override;
 
-    void paintEvent(QPaintEvent *);
-    void mouseDoubleClickEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *ev);
-    void mousePressEvent(QMouseEvent *ev);
-    void mouseReleaseEvent(QMouseEvent *ev);
-    void drawNeure();
-    void drawTran();
-    void drawtmp(transport tmp);
-    void delInputneure(InputNeure Ineure1);
-    void delhiddenneure(hidden_layer Hneure1);
-    void delOutputneure(OutputNeure Oneure1);
+    Network &network() { return m_net; }
+    NetworkCanvas *canvas() const { return m_canvas; }
+
+    void addNeuron(NeuronKind kind);
+    void runNetwork();
+    void editNeuron(int id);
+    void editEdge(int id);
+    bool exportTo(const QString &path, QString *error = nullptr) const;
 
 private:
+    void clearAll();
+    void exportData();
+    void showMessage(const QString &text);
+
     Ui::MainWindow *ui;
-    Ui::Dialog *id;     //dialog1设置激活函数
-    Ui::Dialog2 *id2;   //dialog2设置权值
-    Ui::Dialog3 *id3;   //dialog3设置初值
-
-
-    int  key=0;
-    int transkey=0;
-    int deleteallkind=0;
-
-    Adjacency_List a;//生成图
-    vector<InputNeure> Ineure;
-    vector<hidden_layer>Hneure;//图形界面
-    vector<OutputNeure>Oneure;//图形界面
-    vector<transport>tp;//图形界面
-    transport tmp;  //设置线
-
+    Network m_net;              // 唯一的数据
+    NetworkCanvas *m_canvas;    // 只负责显示和交互
 };
+
 #endif // MAINWINDOW_H
