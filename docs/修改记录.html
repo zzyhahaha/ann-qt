@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ANN 修改记录</title>
+<style>
+:root { --fg:#1f2328; --muted:#59636e; --bg:#ffffff; --line:#d1d9e0; --soft:#f6f8fa; --accent:#0969da; }
+@media (prefers-color-scheme: dark) {
+  :root { --fg:#e6edf3; --muted:#9198a1; --bg:#0d1117; --line:#3d444d; --soft:#151b23; --accent:#4493f8; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 15px/1.75 "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; }
+main { max-width: 1060px; margin: 0 auto; padding: 24px 16px 80px; }
+h1 { font-size: 28px; margin: 8px 0 12px; }
+h2 { margin-top: 2.4em; padding-bottom: .3em; border-bottom: 1px solid var(--line); }
+h3 { margin-top: 2em; }
+h4 { margin-top: 1.6em; font-size: 16px; }
+a { color: var(--accent); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+table { border-collapse: collapse; margin: 12px 0; display: block; overflow-x: auto; max-width: 100%; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; vertical-align: top; }
+th { background: var(--soft); text-align: left; }
+table.shots { display: table; table-layout: fixed; width: 100%; }
+table.shots td img { width: 100%; }
+img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 4px; vertical-align: top; }
+code { background: var(--soft); padding: .1em .35em; border-radius: 4px;
+       font-family: Consolas, "Cascadia Mono", "Microsoft YaHei UI", "Microsoft YaHei", monospace; font-size: 90%; }
+a.zoom { cursor: zoom-in; }
+pre { background: var(--soft); padding: 12px 14px; border-radius: 6px; overflow-x: auto; line-height: 1.5; }
+pre code { padding: 0; background: none; font-size: 13px; }
+nav.toc { background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 10px 18px; margin: 16px 0 8px; }
+nav.toc b { color: var(--muted); font-weight: normal; }
+nav.toc ol { margin: 4px 0; padding-left: 1.4em; columns: 2; column-gap: 32px; }
+@media (max-width: 640px) { nav.toc ol { columns: 1; } }
+</style>
+</head>
+<body>
+<main>
+<h1>ANN 神经元模拟器 · 修改记录</h1>
+<ul>
+<li><strong>日期</strong>：2026-11-09</li>
+<li><strong>基线</strong>：git <code>4ffc9e2</code>（2021-12-07，提交信息 <code>finish2</code>），也就是数据结构课设最后的版本</li>
+<li><strong>改后的代码</strong>：<code>E:\Claude code\ann-qt</code>。原来的 <code>C:\Users\67495\Documents\ANN</code> 没动过</li>
+<li><strong>环境</strong>：Qt 6.1.3 + MinGW 8.1.0 64-bit（MinGW：Minimalist GNU for Windows，Windows 上的 GCC 工具链；GCC：GNU Compiler Collection，GNU 编译器套件）</li>
+<li><strong>阅读</strong>：同目录的 <code>修改记录.html</code> 是这份文档的网页版（带目录，截图可点开看原图），改了本文件后运行 <code>python docs/build_html.py</code> 重新生成</li>
+</ul>
+<nav class="toc"><b>目录</b><ol><li><a href="#0-一页看完">0. 一页看完</a></li><li><a href="#1-找到的项目">1. 找到的项目</a></li><li><a href="#2-问题清单">2. 问题清单</a></li><li><a href="#3-结构调整为什么不逐行打补丁">3. 结构调整：为什么不逐行打补丁</a></li><li><a href="#4-优化和用到的东西">4. 优化和用到的东西</a></li><li><a href="#5-验证">5. 验证</a></li><li><a href="#6-怎么编译运行测试">6. 怎么编译、运行、测试</a></li><li><a href="#7-新版怎么操作">7. 新版怎么操作</a></li><li><a href="#8-没做的可以接着做的">8. 没做的、可以接着做的</a></li></ol></nav>
+<hr />
+<h2 id="0-一页看完">0. 一页看完</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>修改前</th>
+<th>修改后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>实际复现出的问题</td>
+<td>17 条（复现程序逐条跑过，见 §5.1）</td>
+<td>全部修好，每条都有对应的自动化测试</td>
+</tr>
+<tr>
+<td>自动化测试</td>
+<td>没有</td>
+<td>41 个用例，全部通过</td>
+</tr>
+<tr>
+<td>编译</td>
+<td><code>Documents\ANN</code> 现在的工作区编译失败；git 里的版本有 41 条警告</td>
+<td>0 警告、0 错误</td>
+</tr>
+<tr>
+<td>什么都不做，空闲 2 秒</td>
+<td>重绘 3607 次，CPU 时间 1969 ms（一个核跑满）</td>
+<td>重绘 0 次，CPU 时间 0 ms</td>
+</tr>
+<tr>
+<td>有跳层连接的网络（§2.2 的例子）</td>
+<td>输出 0.16（错）</td>
+<td>输出 0.224（对）</td>
+</tr>
+<tr>
+<td>一次前向计算（70 个神经元、1200 条边）</td>
+<td>2231 ms</td>
+<td>0.077 ms</td>
+</tr>
+<tr>
+<td>代码结构</td>
+<td>同一份数据存两份（界面一份、图一份），3 个几乎一样的神经元类</td>
+<td>只有一份数据（<code>Network</code>），画布只负责显示和交互</td>
+</tr>
+</tbody>
+</table>
+<p><strong>你记得的“删除”问题确实存在，而且不止一处</strong>：R1（删神经元删错线）、R2（删除循环漏删）、R3（删过线后，新线的权值不参与计算）、R14（“删除线”和“删除点”共用一个开关）、R15（删线后结果不清零）。</p>
+<p><strong>只有一处会改变计算结果</strong>（R16）：阈值原来是“激活之后再减”，现在改成了“先减再激活”，即 f(x) − θ 改成 f(x − θ)。2026-11-09 已确认保留新公式；原公式的问题和换回去的方法留在 §2.2 备查。</p>
+<hr />
+<h2 id="1-找到的项目">1. 找到的项目</h2>
+<p>Qt Creator 最近打开的项目列表里，第一个就是 <code>Documents\ANN\ANN.pro</code>。电脑上一共有三份：</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>是什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>C:\Users\67495\Documents\ANN</code></td>
+<td>Qt Creator 打开的这份，是 git 仓库，HEAD = <code>4ffc9e2</code></td>
+</tr>
+<tr>
+<td>桌面 <code>大学\大三\大三上\数据结构\…课设\ANN</code></td>
+<td>交课设时拷的副本，内容和 <code>4ffc9e2</code> 一样</td>
+</tr>
+<tr>
+<td>桌面 <code>大学\ann-master</code></td>
+<td>从 Gitee 下载的 <code>4ffc9e2</code> 压缩包</td>
+</tr>
+</tbody>
+</table>
+<p><code>Documents\ANN</code> 里有没提交的改动：<code>dialog.ui</code> 在 2022-06-28 被 Qt Creator 的空白对话框模板覆盖，“激活函数”两个单选框和“阈值”输入框都没了。可是 <code>dialog.cpp</code> 还在用 <code>ui-&gt;Yuzhi</code>、<code>ui-&gt;func1</code>、<code>ui-&gt;func2</code>，所以这份现在编译会报 3 个错。副本里先按 git HEAD 恢复了 <code>dialog.*</code>，再在这个基础上修改。</p>
+<hr />
+<h2 id="2-问题清单">2. 问题清单</h2>
+<p>编号和复现程序、测试用例里的编号一一对应。代码位置都是指原版（<code>4ffc9e2</code>）。</p>
+<h3 id="21-删除相关">2.1 删除相关</h3>
+<h4>R1　删神经元时删错了线</h4>
+<ul>
+<li>
+<p><strong>现象</strong>：两个输入神经元 0、1 都连到隐层 2，删掉 0 以后，0 的线还挂在原处，1 的线反而没了。界面上的数据和计算用的数据从此对不上。</p>
+<table class="shots">
+<thead>
+<tr>
+<th>删除前</th>
+<th>删除 0 号之后（原版）</th>
+<th>删除 0 号之后（新版）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="zoom" href="img/before_r1_1_before_delete.png" target="_blank"><img src="img/before_r1_1_before_delete.png" alt="" /></a></td>
+<td><a class="zoom" href="img/before_r1_2_after_delete.png" target="_blank"><img src="img/before_r1_2_after_delete.png" alt="" /></a></td>
+<td><a class="zoom" href="img/after_r1_delete_neuron.png" target="_blank"><img src="img/after_r1_delete_neuron.png" alt="" /></a></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>原因</strong>：<code>mainwindow.cpp:339-341</code>（隐层 360-362、输出 381-383 是同样的写法）</p>
+<pre><code class="language-cpp">a.delvertax(Ineure[i].getkey());
+Ineure.erase(Ineure.begin()+i);   // 第 i 个删掉，后面的元素整体往前挪一格
+delInputneure(Ineure[i]);         // 这时的 Ineure[i] 已经是“下一个”神经元了
+</code></pre>
+<p>如果删的正好是最后一个，<code>Ineure[i]</code> 就越界了，属于 UB（Undefined Behavior，未定义行为）。在 MinGW 上读到的往往还是刚删掉那个元素的旧内存，所以有时候看起来“没问题”，这类 bug 因此很难察觉。</p>
+</li>
+<li>
+<p><strong>修改</strong>：删除统一走 <code>Network::removeNeuron(id)</code>：按 id 找到神经元，把它和相连的线在同一个地方一起删掉，erase 之后不再用下标去取元素。</p>
+</li>
+</ul>
+<h4>R2　删除循环会漏删</h4>
+<ul>
+<li><strong>现象</strong>：隐层神经元有两条出线时，删掉它只删得掉一条。</li>
+<li><strong>原因</strong>：<code>mainwindow.cpp:574-579、583-596、601-606</code>，<code>adjacency_list.cpp:55-60、76-92</code> 都是同一种写法：<pre><code class="language-cpp">for(int i=0;i&lt;(int)tp.size();i++){
+    if(...){ tp.erase(tp.begin()+i); i=0; }   // 设成 0 以后 for 还会执行 i++，下一轮从 1 开始，新的 tp[0] 被跳过
+}
+</code></pre>
+另外 <code>mainwindow.cpp:586、593</code> 在 erase 之后马上 <code>qDebug()&lt;&lt;tp[i]…</code>，也可能越界。</li>
+<li><strong>修改</strong>：用 erase-remove 惯用法，一遍扫完：<pre><code class="language-cpp">m_edges.erase(std::remove_if(m_edges.begin(), m_edges.end(),
+                             [id](const Edge &amp;e) { return e.from == id || e.to == id; }),
+              m_edges.end());
+</code></pre>
+<code>remove_if</code> 把要保留的元素挪到前面，返回“新的结尾”；<code>erase</code> 再一次截掉后面那段。如果想继续用下标循环，正确写法是 erase 之后 <code>i--</code>，或者从后往前遍历。</li>
+</ul>
+<h4>R3　删过线以后，新连的线设了权值也不参与计算</h4>
+<ul>
+<li>
+<p><strong>现象</strong>：连一条线 → 删掉 → 再连一条 → 设输入 1、权值 2 → 运行，输出是 0，不是 2。线上显示的明明是“weight:2”。</p>
+<p><a class="zoom" href="img/before_r3_weight_lost_after_delete.png" target="_blank"><img src="img/before_r3_weight_lost_after_delete.png" alt="" /></a></p>
+</li>
+<li>
+<p><strong>原因</strong>：同一条线有两套编号。界面用 <code>transkey</code>，只增不减（<code>mainwindow.cpp:474-477、487-490</code>）；图里却在 <code>addEdge</code> 里改成了当前边数 <code>m</code>（<code>adjacency_list.cpp:22</code>），删线时 <code>m--</code>（第 62 行）。删过一次之后两套编号就错开了：设权值的 <code>intransport</code>（319-327 行）按编号去图里找，找不到，权值就没传过去。更糟的是，图里可能出现两条编号相同的边，删一条会连另一条一起删。<code>delvertax</code> 删入边时还漏了 <code>m--</code>（第 85 行），编号偏得更厉害。</p>
+</li>
+<li>
+<p><strong>修改</strong>：只保留一份数据，边的 id 由 <code>Network</code> 统一分配，只增不减、永不复用。不存在第二份数据，也就不存在“两边对不上”。</p>
+</li>
+</ul>
+<h4>R3b　点“清空”之后，重新搭同一个网络，结果变成 0</h4>
+<ul>
+<li><strong>原因</strong>：清空时（<code>mainwindow.cpp:65-73</code>）把 <code>key</code> 归零了，<code>transkey</code> 却没归零；<code>clrdesk()</code> 又把图里的 <code>m</code> 归零（<code>adjacency_list.cpp:254-262</code>）。于是清空后的第一条线编号就对不上，和 R3 是同一个问题。</li>
+<li><strong>修改</strong>：<code>Network::clear()</code> 把两个计数器一起归零。</li>
+</ul>
+<h4>R14　“删除线”和“删除点”其实是同一个开关</h4>
+<ul>
+<li>
+<p><strong>现象</strong>：选了“删除线”，点到神经元上，神经元照样被删；点了空白处，删除模式仍然挂着，界面也没有任何提示，下一次想拖神经元时，一点它就被删了。</p>
+</li>
+<li>
+<p><strong>原因</strong>：两个菜单项都只是 <code>deleteallkind=1</code>（<code>mainwindow.cpp:93-104</code>），而按下鼠标时先检查神经元、后检查线（337、358、379、405 行）。</p>
+</li>
+<li>
+<p><strong>修改</strong>：画布上有三种独立的模式 <code>Mode { Normal, DeleteNeuron, DeleteEdge }</code>。进入删除模式时状态栏给提示，鼠标变成十字，悬停在会被删除的对象上时高亮成橙色。点空白处只提示、不退出，删掉一个之后回到普通模式，Esc 或右键随时取消。</p>
+<p><a class="zoom" href="img/after_r10_right_to_left_hover.png" target="_blank"><img src="img/after_r10_right_to_left_hover.png" alt="" /></a></p>
+</li>
+</ul>
+<h4>R15　删掉线再运行，结果还是上一次的</h4>
+<ul>
+<li><strong>原因</strong>：<code>TopSort</code> 只有在处理“某条进来的线”时才会写这个神经元的值（<code>adjacency_list.cpp:159-168</code>），没有线进来的神经元保持旧值，<code>retOutput</code> 又把旧值抄回界面。</li>
+<li><strong>修改</strong>：<code>run()</code> 开始前先把所有非输入神经元的总输入、总输出清零。</li>
+</ul>
+<h3 id="22-计算相关">2.2 计算相关</h3>
+<h4>R4　有“跳层连接”时，拓扑排序算错</h4>
+<ul>
+<li>
+<p><strong>例子</strong>：0→2、1→3、2→3、3→4，权值都是 0.4，两个输入都是 1。2、3 是隐层（线性，阈值 0），4 是输出。3 同时收到输入层（1）和隐层（2）的线。</p>
+<ul>
+<li>正确结果：H2 = 0.4；H3 = 1×0.4 + 0.4×0.4 = 0.56；O4 = 0.56×0.4 = <strong>0.224</strong></li>
+<li>原版：H3 显示 0.56，O4 却是 <strong>0.16</strong> = 0.4×0.4</li>
+</ul>
+<table class="shots">
+<thead>
+<tr>
+<th>原版</th>
+<th>新版</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="zoom" href="img/before_r4_skip_connection.png" target="_blank"><img src="img/before_r4_skip_connection.png" alt="" /></a></td>
+<td><a class="zoom" href="img/after_r4_skip_connection.png" target="_blank"><img src="img/after_r4_skip_connection.png" alt="" /></a></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>原因</strong>（<code>adjacency_list.cpp:99-242</code>）：</p>
+<ol>
+<li>每处理完一个节点，就把<strong>所有</strong>入度为 0 的节点再压一遍队列（209-220 行），同一个节点会被重复入队；</li>
+<li>每次出队（包括重复的那几次）都会把后继节点的入度减一次（183-192 行），于是入度会<strong>提前</strong>减到 0，甚至减成负数；</li>
+<li>队列里存的是节点的<strong>拷贝</strong>（111、216 行），入队时的“半成品”输出就被冻结在拷贝里了；</li>
+<li>为了防止重复出队时把同一条线的贡献加两遍，第 144 行用完一条线就把它的权值设成 0。这个补丁让普通的分层网络碰巧算对，但修正后的值也就再也传不出去了。</li>
+</ol>
+<p>以上面的例子逐步看：</p>
+<table>
+<thead>
+<tr>
+<th>步</th>
+<th>出队</th>
+<th>发生了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>I0</td>
+<td>H2 收到 0.4，入度 1→0；I1、H2 入队（I1 是第二次入队）</td>
+</tr>
+<tr>
+<td>2</td>
+<td>I1</td>
+<td>H3 收到 0.4，入度 2→1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>I1（重复）</td>
+<td>权值已清零，不再累加，但又把 H3 的入度减了一次：1→0。这时 H2 还没传过来，H3 带着半成品输出 0.4 入队</td>
+</tr>
+<tr>
+<td>4</td>
+<td>H2</td>
+<td>H3 的总输入变成 0.56，是对的，可队列里那份 H3 拷贝还是 0.4</td>
+</tr>
+<tr>
+<td>7</td>
+<td>H3（第 3 步入队的那份）</td>
+<td>用 0.4 往下传：O4 = 0.4×0.4 = 0.16 ✗</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>修改</strong>：换成标准的 Kahn 拓扑排序（<code>network.cpp</code> 的 <code>run()</code>）：</p>
+<ul>
+<li>先由边表建出邻接表和入度表，O(V+E)；</li>
+<li>每条边只让入度减一次；节点在入度减到 0 的那一刻入队，<strong>只入队一次</strong>；</li>
+<li>队列里存下标，不存拷贝；输出在<strong>出队时</strong>才计算，这时它的所有上游一定都已经算完；</li>
+<li>最后检查“算到的个数是否等于总数”，少了就说明有环（原版数了 <code>cnt</code>，却从没用它判断过）。</li>
+</ul>
+</li>
+</ul>
+<h4>R9　可以连自环（以及环路），运行时悄悄算不出来</h4>
+<ul>
+<li>
+<p><strong>现象</strong>：右键从隐层拖回它自己，生成一条自环。运行后，这个神经元自己显示输出 1，下游的输出神经元却是 0，没有任何提示。</p>
+</li>
+<li>
+<p><strong>原因</strong>：连线时不检查自环、重复连线、成环（<code>mainwindow.cpp:467-495</code>）；环上的节点入度永远减不到 0，<code>TopSort</code> 也不报错。</p>
+</li>
+<li>
+<p><strong>修改</strong>：<code>Network::addEdge</code> 统一检查连线规则，不合法就拒绝，状态栏说明原因：</p>
+<ul>
+<li>不能连到自己；不能重复连同一对神经元；输出神经元不能当起点；不能连向输入神经元；</li>
+<li><strong>不能成环</strong>：加 from→to 之前，先用 BFS（Breadth-First Search，广度优先搜索）看能不能从 to 走回 from，能走回去就说明加上这条线会成环。前馈网络本来就必须是 DAG（Directed Acyclic Graph，有向无环图），否则没法按拓扑序计算；</li>
+<li><code>run()</code> 里仍然保留“有环”的检查和提示，作为兜底。</li>
+</ul>
+<table class="shots">
+<thead>
+<tr>
+<th>原版：自环被接受</th>
+<th>新版：拒绝，状态栏说明原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="zoom" href="img/before_r9_self_loop.png" target="_blank"><img src="img/before_r9_self_loop.png" alt="" /></a></td>
+<td><a class="zoom" href="img/after_r9_self_loop_rejected.png" target="_blank"><img src="img/after_r9_self_loop_rejected.png" alt="" /></a></td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<h4>R16　阈值的用法（语义修正，会改变结果）</h4>
+<ul>
+<li>
+<p><strong>原来</strong>（<code>hidden_layer.cpp:46-66</code>）：输出 = f(总输入) − θ。用阶跃函数时，输出是 1−θ 或 −θ，不再是 0/1；用线性函数时，阈值也不影响饱和区。</p>
+</li>
+<li>
+<p><strong>现在</strong>：输出 = f(总输入 − θ)，也就是标准的 M-P（McCulloch–Pitts）神经元模型 y = f(Σ wᵢxᵢ − θ)，教材里的标准写法，比如周志华《机器学习》5.1 节。</p>
+<table>
+<thead>
+<tr>
+<th>激活函数</th>
+<th>总输入</th>
+<th>θ</th>
+<th>原来 f(x)−θ</th>
+<th>现在 f(x−θ)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>阶跃</td>
+<td>0.6</td>
+<td>0.5</td>
+<td>0.5</td>
+<td>1</td>
+</tr>
+<tr>
+<td>阶跃</td>
+<td>0.2</td>
+<td>0.5</td>
+<td>0.5（和上一行一样，阈值没起到“门槛”作用）</td>
+<td>0</td>
+</tr>
+<tr>
+<td>阶跃</td>
+<td>−0.3</td>
+<td>0.5</td>
+<td>−0.5</td>
+<td>0</td>
+</tr>
+<tr>
+<td>线性（限幅 ±1）</td>
+<td>2.0</td>
+<td>0.5</td>
+<td>0.5</td>
+<td>1</td>
+</tr>
+<tr>
+<td>线性（限幅 ±1）</td>
+<td>0.3</td>
+<td>0.1</td>
+<td>0.2</td>
+<td>0.2（未饱和时两者一样）</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>2026-11-09 已确认采用新公式。</strong> 以后如果需要换回原来的公式，把 <code>network.cpp</code> 的 <code>run()</code> 里这一行
+<code>cur.output = activate(cur.activation, cur.input - cur.threshold);</code>
+改成 <code>cur.output = activate(cur.activation, cur.input) - cur.threshold;</code>，再改一下 <code>tests/tst_ann.cpp</code> 里 <code>activationFunctions</code> 的期望值就行。</p>
+</li>
+</ul>
+<h3 id="23-交互相关">2.3 交互相关</h3>
+<h4>R5　对话框点“取消”，原来的值会被清成 0</h4>
+<ul>
+<li>
+<p><strong>原因</strong>：<code>exec()</code> 的返回值没有判断（<code>mainwindow.cpp:507-514、526-538、555-562</code>），点取消也照样去读输入框。空字符串 <code>toFloat()</code> 得 0；两个单选框都没选时 <code>getflag()</code> 返回 0，激活函数直接失效。</p>
+</li>
+<li>
+<p><strong>修改</strong>：只有 <code>exec() == QDialog::Accepted</code> 才写回。对话框打开时预填当前值并全选，激活函数默认选中“线性”。输入框加了 <code>QDoubleValidator</code>（只能输数字），并重写了 <code>accept()</code>：填的不是数字时弹提示、不关闭对话框（原来 <code>toFloat()</code> 失败也悄悄变成 0）。</p>
+<p><a class="zoom" href="img/after_dialog_hidden_prefilled.png" target="_blank"><img src="img/after_dialog_hidden_prefilled.png" alt="" /></a>　<a class="zoom" href="img/after_dialog_weight_prefilled.png" target="_blank"><img src="img/after_dialog_weight_prefilled.png" alt="" /></a></p>
+</li>
+</ul>
+<h4>R8　右键从空白处拖到神经元上，也会凭空连出一条线</h4>
+<ul>
+<li>
+<p><strong>原因</strong>：连线用的临时对象 <code>tmp</code> 是成员变量（<code>mainwindow.h:62</code>）。在空白处按下右键不会重设它的起点（<code>mainwindow.cpp:415-433</code>），松开时只要落在神经元上就建线（467-495 行），于是沿用了上一次的起点。第一次就从空白处拖的话，起点是未初始化的随机值。</p>
+</li>
+<li>
+<p><strong>修改</strong>：只有在神经元上按下右键才记住起点（<code>m_linkFrom</code>），否则什么都不做；松开时只有起点有效才连线。拖动过程中画一条灰色虚线做预览。原来本想画预览线，但 <code>mouseMoveEvent</code> 里用的是 <code>ev-&gt;button()</code>（319 行），移动事件里它永远是 <code>NoButton</code>，所以预览线从来没出现过；应该用 <code>buttons()</code>。</p>
+<table class="shots">
+<thead>
+<tr>
+<th>原版：多出一条 0→2</th>
+<th>新版：不生成</th>
+<th>新版：拖动时的虚线预览</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="zoom" href="img/before_r8_phantom_edge.png" target="_blank"><img src="img/before_r8_phantom_edge.png" alt="" /></a></td>
+<td><a class="zoom" href="img/after_r8_no_phantom_edge.png" target="_blank"><img src="img/after_r8_no_phantom_edge.png" alt="" /></a></td>
+<td><a class="zoom" href="img/after_link_preview.png" target="_blank"><img src="img/after_link_preview.png" alt="" /></a></td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<h4>R10　从右往左连的线点不中（删不掉，也设不了权值）</h4>
+<ul>
+<li>
+<p><strong>原因</strong>：判断“点没点中线”（<code>mainwindow.cpp:401-405、548-553</code>）时：</p>
+<ul>
+<li>要求 <code>x1 &lt; x &lt; x2</code>，从右往左的线永远不满足；</li>
+<li>竖直的线 <code>x1 == x2</code>，求斜率时除以 0；</li>
+<li>用的是“竖直方向的距离 &lt; 3 像素”，线越陡，横向能点中的范围就越窄；</li>
+<li>线的端点固定是“起点圆的右边缘 → 终点圆的左边缘”（420、428、472、485 行），目标在左边时，线会横穿两个圆。</li>
+</ul>
+<p><a class="zoom" href="img/before_r10_right_to_left_wire.png" target="_blank"><img src="img/before_r10_right_to_left_wire.png" alt="" /></a></p>
+</li>
+<li>
+<p><strong>修改</strong>：</p>
+<ul>
+<li>用<strong>点到线段的距离</strong>：把点投影到线段上，投影参数 t 夹在 [0, 1] 内，再求点到投影点的距离，≤ 6 像素就算点中，方向、角度都不影响。点线中间的权值标签也算点中；</li>
+<li>线的端点沿两个圆心的连线方向，从一个圆周画到另一个圆周，画的时候实时计算；末端加箭头，表示方向。</li>
+</ul>
+</li>
+</ul>
+<h4>R11、R12　拖动：叠在一起的神经元分不开；鼠标一快就拖不动</h4>
+<ul>
+<li><strong>原因</strong>：
+<ul>
+<li>按下时每一层各自找一个命中的神经元，把它标记成“正在拖”（<code>mainwindow.cpp:330-395</code>）。输入神经元和隐层神经元叠在一起时，两个都被标记，拖一个，两个一起动，从此分不开；</li>
+<li>移动时每次都重新判断“鼠标还在不在圆的外接正方形里”（262、279、300 行），鼠标一次移出 50 像素就跟丢了；</li>
+<li>松开时判断的是 <code>ev-&gt;buttons() == Qt::LeftButton</code>（438 行），可松开的那一刻左键已经不在 <code>buttons()</code> 里了，所以“正在拖”的标记永远清不掉。</li>
+</ul>
+</li>
+<li><strong>修改</strong>：按下时只取<strong>最上面</strong>的那一个神经元（倒序查找，用真正的圆形判断），记下它的 id 和“按下点相对圆心的偏移”；移动时直接移动这个神经元，不再重新判断命中，并限制在画布范围内；松开时清掉。</li>
+</ul>
+<h3 id="24-资源健壮性代码质量">2.4 资源、健壮性、代码质量</h3>
+<h4>R6　成员变量没初始化</h4>
+<ul>
+<li><code>hidden_layer</code> 的 <code>flag</code>、<code>jiflag</code>（<code>hidden_layer.h:10、13</code>），输入/输出神经元的 <code>flag</code>，<code>transport</code> 的 <code>from/to/key/坐标</code>（<code>transport.h:13-16</code>）都没有初值。读未初始化的变量是 UB：复现时同一个新建的隐层神经元，界面那份读到 0，图里那份读到 32763。激活函数编号不是 1 或 2 时，激活函数直接不起作用，输出一直是 0。</li>
+<li><strong>修改</strong>：<code>Neuron</code>、<code>Edge</code> 的每个字段都写了默认初值（C++11 的“成员默认初始化”），新建隐层神经元默认是线性激活、阈值 0。</li>
+</ul>
+<h4>R7　空闲时也一直重绘，占满一个 CPU 核</h4>
+<ul>
+<li><strong>原因</strong>：<code>paintEvent</code> 调用的 <code>drawNeure()</code>、<code>drawTran()</code> 结尾都调了 <code>update()</code>（<code>mainwindow.cpp:238、254</code>）。<code>update()</code> 会安排下一次重绘，于是画完马上再画，永不停止。实测空闲 2 秒内重绘 3607 次，进程 CPU 时间 1969 ms，相当于一个核跑满（另一次没加载字体时，2 秒重绘了 10958 次）。</li>
+<li><strong>修改</strong>：<code>paintEvent</code> 里不调 <code>update()</code>，只在数据或交互状态变化时才调。删除模式下的悬停高亮，也只在“指着的对象”变了时才重绘。实测空闲 2 秒：重绘 0 次，CPU 0 ms。</li>
+</ul>
+<h4>R13　每次双击都 new 一个对话框，用完不释放</h4>
+<ul>
+<li><strong>原因</strong>：<code>new Dialog3(this)</code> 之类（<code>mainwindow.cpp:507、526、555</code>），父对象是主窗口，所以要等主窗口关掉才释放，双击一次就多一个对象。</li>
+<li><strong>修改</strong>：对话框建在栈上（<code>Dialog3 dlg(this);</code>），函数结束时自动销毁。这就是 RAII（Resource Acquisition Is Initialization，资源获取即初始化），对象的生命周期和作用域绑在一起。</li>
+</ul>
+<h4>其他</h4>
+<ul>
+<li><strong>编译警告 41 条</strong>：都是 <code>-Wparentheses</code>，条件里把逻辑与 <code>&amp;&amp;</code> 写成了按位与 <code>&amp;</code>，例如 <code>x&gt;a &amp; x&lt;b</code>。比较结果是 0/1，所以碰巧算得对，但不会短路求值，可读性也差。重写后 0 警告。</li>
+<li><strong>导出路径写死</strong>（<code>mainwindow.cpp:109</code>）：写死了本机桌面上的 <code>test.txt</code>，换一台电脑就失败，而且打开失败后还接着往里写（111-115 行）。现在弹出“另存为”对话框（默认放在“文档”目录），失败时给出提示；文件存成带 BOM（Byte Order Mark，字节顺序标记）的 UTF-8（8-bit Unicode Transformation Format），老版本记事本打开中文也不乱码。<strong>导出的文本格式和原来完全一样</strong>。</li>
+<li><strong>死代码</strong>：基类 <code>Neure</code> 被私有继承，<code>key</code> 又被子类同名成员遮住，实际上没用；<code>outputnerue.h/.cpp</code> 是拼错名字的空类，没参与编译；<code>#define MAX 30</code>、<code>node.weight</code>（int 型，没用到）、<code>mainwindow.h</code> 里没用的 <code>Ui::Dialog *id</code> 等指针、头文件里的 <code>using namespace std;</code> 都去掉了。</li>
+<li><strong>新建的神经元都摞在同一个点上</strong>：现在在本层那一列里从上往下找空位（输入 x=100、隐层 x=300、输出 x=500，和原来的位置一致）。</li>
+<li><strong>直接画在 <code>QMainWindow</code> 上</strong>：菜单栏会盖住上面一截。现在画布是单独的中心部件（central widget）。</li>
+<li><strong>一些小改进</strong>：抗锯齿；线末端有箭头；权值标签带底色；文字颜色比圆圈深一点（纯绿上的绿字原来很难认）；每一步操作都在状态栏给反馈；“清空”前要确认（这一步不能撤销）。</li>
+</ul>
+<hr />
+<h2 id="3-结构调整为什么不逐行打补丁">3. 结构调整：为什么不逐行打补丁</h2>
+<h3 id="31-根本问题同一份数据存了两份">3.1 根本问题：同一份数据存了两份</h3>
+<pre><code>修改前
+MainWindow
+ ├─ Ineure / Hneure / Oneure / tp      ← 界面用的一份（位置、显示的值、线的端点坐标）
+ └─ Adjacency_List a
+      ├─ k（结点：入度、in、out）
+      ├─ tr（边）                      ← 计算用的又一份
+      └─ Inputne / hidden / Outne
+</code></pre>
+<p>每次加点、连线、设值、删除，都要两边各改一次；运行前还要把界面上的值抄进图（<code>inInput / inhidden / intransport</code>），运行后再抄回来（<code>retInput / retHidden / retOutput</code>）。只要一处漏改、编号对不上，两边就不一致，R1、R3、R3b、R15 都是这么来的。逐行打补丁只能堵住已经发现的漏洞，结构不变，下次加功能还会再漏。</p>
+<pre><code>修改后
+MainWindow ─── 菜单、对话框、导出
+ ├─ Network m_net        ← 唯一的数据：neurons、edges；所有修改都走它的成员函数
+ └─ NetworkCanvas        ← 只读 m_net 来画；只记“正在拖谁 / 正在从谁连线 / 当前模式”
+</code></pre>
+<h3 id="32-几个具体的设计决定">3.2 几个具体的设计决定</h3>
+<ul>
+<li><strong>存 id，不存下标，也不存指针</strong>：下标在 erase 之后会变（R1 的根源），指向 vector 元素的指针在扩容后会失效。id 只增不减，永不复用。</li>
+<li><strong>三个神经元类合成一个</strong> <code>Neuron</code> + <code>NeuronKind</code>：原来三个类九成代码相同，接口名却各不一样（<code>getx / getX</code>，<code>getoutput / output / Output</code>，<code>setin / setInput</code>），导致每个鼠标事件处理函数里都有三段几乎一样的循环。</li>
+<li><strong>线不再存端点坐标</strong>：原来每拖一次神经元，都要去更新相关的线；现在画的时候按两端神经元的当前位置计算。</li>
+<li><strong>邻接表在 <code>run()</code> 里临时建</strong>：长期存的是边表，画图、命中判断、删除都方便；计算时花 O(V+E) 建出邻接表和入度表，用完就丢。派生出来的数据不长期保存，就不会出现“没同步”。</li>
+<li><strong>修改只能走 <code>Network</code> 的接口</strong>：外部拿到的是 <code>const</code> 指针，只能通过 <code>addEdge / removeNeuron / setWeight / setInputValue / setHiddenParams / setPosition</code> 修改，连线规则只在 <code>addEdge</code> 这一处检查。</li>
+<li><strong>画布和主窗口用信号槽解耦</strong>：画布被双击时只发出 <code>neuronActivated(id)</code> / <code>edgeActivated(id)</code> 信号，弹哪个对话框由主窗口决定。所以画布可以离开对话框单独测试。</li>
+</ul>
+<h3 id="33-文件对照">3.3 文件对照</h3>
+<table>
+<thead>
+<tr>
+<th>原文件</th>
+<th>新文件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>neure.*</code>、<code>inputneure.*</code>、<code>outputneure.*</code>、<code>hidden_layer.*</code></td>
+<td><code>network.h</code>（<code>struct Neuron</code> + <code>NeuronKind</code>）</td>
+<td>三个类合成一个</td>
+</tr>
+<tr>
+<td><code>transport.*</code></td>
+<td><code>network.h</code>（<code>struct Edge</code>）</td>
+<td>不再存端点坐标</td>
+</tr>
+<tr>
+<td><code>adjacency_list.*</code></td>
+<td><code>network.h / network.cpp</code>（<code>class Network</code>）</td>
+<td>唯一的数据，加上增删改查和 <code>run()</code></td>
+</tr>
+<tr>
+<td><code>mainwindow.cpp</code> 里的绘制和鼠标处理</td>
+<td><code>networkcanvas.h / .cpp</code></td>
+<td>画布</td>
+</tr>
+<tr>
+<td><code>mainwindow.*</code></td>
+<td>同名</td>
+<td>只剩菜单、对话框、导出；<code>mainwindow.cpp</code> 从 615 行减到 193 行</td>
+</tr>
+<tr>
+<td><code>dialog*.h / .cpp / .ui</code></td>
+<td>同名</td>
+<td>预填当前值、数字校验、取消不改值；<code>.ui</code> 只改了标题、单选框文字、提示、标签高度</td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>numberedit.h</code></td>
+<td>三个对话框共用的“数字输入框”逻辑</td>
+</tr>
+<tr>
+<td><code>outputnerue.*</code></td>
+<td>删除</td>
+<td>拼错名字的空类</td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>tests/</code></td>
+<td>自动化测试</td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>docs/</code></td>
+<td>本记录、截图、复现程序</td>
+</tr>
+</tbody>
+</table>
+<p>全部源码从 1732 行减到 1400 行（含新加的注释），另有测试 848 行。</p>
+<hr />
+<h2 id="4-优化和用到的东西">4. 优化和用到的东西</h2>
+<table>
+<thead>
+<tr>
+<th>用到的</th>
+<th>用在哪</th>
+<th>解决了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>单一数据源</strong>（single source of truth）</td>
+<td><code>Network</code></td>
+<td>界面和计算两份数据不一致（R1、R3、R3b、R15）</td>
+</tr>
+<tr>
+<td><strong>Kahn 拓扑排序</strong> + 入度表 + 临时邻接表，O(V+E)</td>
+<td><code>Network::run()</code></td>
+<td>跳层连接算错（R4）；原版大约按 V²·E 增长的耗时（§5.4）</td>
+</tr>
+<tr>
+<td><strong>BFS 可达性判断</strong></td>
+<td><code>Network::reachable()</code>、<code>addEdge()</code></td>
+<td>连线时就拒绝环路（R9）</td>
+</tr>
+<tr>
+<td><strong>erase-remove 惯用法</strong>（<code>std::remove_if</code> + <code>erase</code>）</td>
+<td><code>removeNeuron()</code></td>
+<td>删除循环漏删、越界（R2）</td>
+</tr>
+<tr>
+<td><strong>按 id 寻址，id 只增不减</strong></td>
+<td><code>Network</code></td>
+<td>erase 后下标错位（R1）、两套编号（R3）</td>
+</tr>
+<tr>
+<td><strong>点到线段的距离</strong>（向量点积投影）</td>
+<td><code>NetworkCanvas::edgeAt()</code></td>
+<td>从右往左、竖直、很陡的线点不中（R10）</td>
+</tr>
+<tr>
+<td><strong>交互状态机</strong>：<code>Mode</code> 枚举 + 拖动状态 + 连线状态</td>
+<td><code>NetworkCanvas</code></td>
+<td>删除模式混用（R14）、拖动跟丢和粘连（R11、R12）、凭空连线（R8）</td>
+</tr>
+<tr>
+<td><strong>只在数据变化时 <code>update()</code></strong></td>
+<td><code>NetworkCanvas</code></td>
+<td>空闲时一直重绘（R7）</td>
+</tr>
+<tr>
+<td><strong>成员默认初始化</strong></td>
+<td><code>Neuron</code>、<code>Edge</code></td>
+<td>未初始化变量（R6）</td>
+</tr>
+<tr>
+<td><strong>栈对象 / RAII</strong> + 判断 <code>exec()</code> 的返回值</td>
+<td><code>MainWindow::editNeuron/editEdge</code></td>
+<td>对话框泄漏（R13）、点取消却清零（R5）</td>
+</tr>
+<tr>
+<td><strong><code>QDoubleValidator</code> + 重写 <code>accept()</code></strong></td>
+<td><code>numberedit.h</code>、三个对话框</td>
+<td>填错悄悄变成 0</td>
+</tr>
+<tr>
+<td><strong>信号槽解耦</strong></td>
+<td>画布 → 主窗口</td>
+<td>画布可以单独测试</td>
+</tr>
+<tr>
+<td><code>QFileDialog</code> + <code>QStandardPaths</code> + 错误处理 + UTF-8 BOM</td>
+<td>导出</td>
+<td>路径写死、失败后照样写</td>
+</tr>
+<tr>
+<td><code>QPainter</code> 抗锯齿、箭头、标签底色</td>
+<td>绘制</td>
+<td>看清方向、读清数字</td>
+</tr>
+<tr>
+<td><strong>Qt Test</strong>：数据驱动用例、<code>QSignalSpy</code>、合成鼠标事件、offscreen 平台</td>
+<td><code>tests/</code></td>
+<td>每条 bug 都有回归测试，能在命令行里自动跑</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-验证">5. 验证</h2>
+<h3 id="51-复现程序先确认原版的问题都是真的">5.1 复现程序：先确认原版的问题都是真的</h3>
+<p><code>docs/repro/repro_original.cpp</code> 直接链接原版源码（一行不改）：用 <code>QMouseEvent</code> 模拟鼠标，用定时器自动填写、关闭对话框，跑完检查内部数据。为了读私有成员，用了 <code>#define private public</code>，这是只在测试代码里用的手段。结果 <strong>17/17 条复现</strong>，完整输出在 <code>docs/repro/repro_report.txt</code>。</p>
+<h3 id="52-自动化测试41-个用例全部通过">5.2 自动化测试：41 个用例全部通过</h3>
+<p><code>tests/tst_ann.cpp</code>（Qt Test），分三组：</p>
+<table>
+<thead>
+<tr>
+<th>组</th>
+<th>用例</th>
+<th>对应</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模型 <code>NetworkTest</code>（25 个）</td>
+<td><code>idsAreUniqueAndNeverReused</code></td>
+<td>R3、R3b</td>
+</tr>
+<tr>
+<td></td>
+<td><code>removeNeuronRemovesExactlyItsEdges</code></td>
+<td>R1、R2</td>
+</tr>
+<tr>
+<td></td>
+<td><code>weightWorksAfterDeletingAnEdge</code></td>
+<td>R3</td>
+</tr>
+<tr>
+<td></td>
+<td><code>clearThenRebuildGivesSameResult</code></td>
+<td>R3b</td>
+</tr>
+<tr>
+<td></td>
+<td><code>skipConnectionComputedCorrectly</code>、<code>runTwiceDoesNotAccumulate</code></td>
+<td>R4</td>
+</tr>
+<tr>
+<td></td>
+<td><code>runResetsStaleResults</code></td>
+<td>R15</td>
+</tr>
+<tr>
+<td></td>
+<td><code>connectRules</code>（8 组数据：自环、重复、从输出出发、连向输入、成环、不存在、两种合法连线）</td>
+<td>R9</td>
+</tr>
+<tr>
+<td></td>
+<td><code>activationFunctions</code>（6 组数据）</td>
+<td>R16</td>
+</tr>
+<tr>
+<td></td>
+<td><code>hiddenDefaultsAreDefined</code></td>
+<td>R6</td>
+</tr>
+<tr>
+<td></td>
+<td><code>randomDagOrderAndSums</code>：随机分层 DAG（含跳层），检查顺序是合法拓扑序，且每个神经元的总输入 = 上游输出 × 权值之和</td>
+<td>R4</td>
+</tr>
+<tr>
+<td></td>
+<td><code>reportTextFormat</code></td>
+<td>导出格式与原来一致</td>
+</tr>
+<tr>
+<td></td>
+<td><code>runIsFast</code></td>
+<td>性能</td>
+</tr>
+<tr>
+<td>画布 <code>CanvasTest</code>（10 个，放在真正的主窗口里，用模拟鼠标操作）</td>
+<td><code>fastDragFollowsMouse</code></td>
+<td>R12</td>
+</tr>
+<tr>
+<td></td>
+<td><code>overlappingDragMovesOnlyTop</code></td>
+<td>R11</td>
+</tr>
+<tr>
+<td></td>
+<td><code>rightDragFromEmptySpaceMakesNoEdge</code></td>
+<td>R8</td>
+</tr>
+<tr>
+<td></td>
+<td><code>rightDragShowsPreviewAndCreatesEdge</code></td>
+<td>R8（预览线）</td>
+</tr>
+<tr>
+<td></td>
+<td><code>selfLoopRejectedInUi</code></td>
+<td>R9</td>
+</tr>
+<tr>
+<td></td>
+<td><code>deleteNeuronByClick</code></td>
+<td>R1</td>
+</tr>
+<tr>
+<td></td>
+<td><code>deleteRightToLeftAndVerticalEdges</code></td>
+<td>R10</td>
+</tr>
+<tr>
+<td></td>
+<td><code>deleteModesAreSeparateAndCancellable</code></td>
+<td>R14</td>
+</tr>
+<tr>
+<td></td>
+<td><code>doubleClickEmitsSignals</code></td>
+<td>双击</td>
+</tr>
+<tr>
+<td></td>
+<td><code>noRepaintWhenIdle</code></td>
+<td>R7</td>
+</tr>
+<tr>
+<td>主窗口 <code>MainWindowTest</code>（6 个）</td>
+<td><code>cancelKeepsValuesAndDialogsArePrefilled</code></td>
+<td>R5</td>
+</tr>
+<tr>
+<td></td>
+<td><code>okWritesValues</code>、<code>invalidNumberKeepsDialogOpen</code></td>
+<td>对话框</td>
+</tr>
+<tr>
+<td></td>
+<td><code>dialogsAreFreed</code></td>
+<td>R13</td>
+</tr>
+<tr>
+<td></td>
+<td><code>exportWritesUtf8File</code></td>
+<td>导出</td>
+</tr>
+<tr>
+<td></td>
+<td><code>endToEndSkipConnectionViaUi</code>：新建 → 拖动 → 右键连线 → 双击设参数 → 运行，全部走界面</td>
+<td>R4</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-前后对比截图">5.3 前后对比截图</h3>
+<p>见 §2 各条。截图是测试和复现程序在 offscreen 平台（Qt 不弹窗口、只在内存里渲染）下用 <code>grab()</code> 截的，字体指定为微软雅黑 UI 9pt，和 Windows 上实际运行时接近。</p>
+<h3 id="54-性能">5.4 性能</h3>
+<p>同一个分层全连接网络（没有跳层连接，原版在这种网络上结果是对的，两边算出来的输出完全一样），跑一次前向计算的耗时。原版编译时关掉了 <code>qDebug</code>，只比算法本身：</p>
+<table>
+<thead>
+<tr>
+<th>网络</th>
+<th>神经元</th>
+<th>边</th>
+<th>原版 <code>TopSort</code></th>
+<th>新版 <code>run()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4-4-2</td>
+<td>10</td>
+<td>24</td>
+<td>2.35 ms</td>
+<td>0.005 ms</td>
+</tr>
+<tr>
+<td>10-10-4</td>
+<td>24</td>
+<td>140</td>
+<td>30 ms</td>
+<td>0.016 ms</td>
+</tr>
+<tr>
+<td>30-30-10</td>
+<td>70</td>
+<td>1200</td>
+<td>2231 ms</td>
+<td>0.077 ms</td>
+</tr>
+<tr>
+<td>60-60-20</td>
+<td>140</td>
+<td>4800</td>
+<td>36671 ms</td>
+<td>0.25 ms</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>说句公道话</strong>：平时手搭十几个神经元，原版也就几毫秒，感觉不到慢。对日常使用来说，这次修改的价值在于<strong>结果对了</strong>，而不是速度。速度差距要到几十个神经元以上才看得出来。</li>
+<li>原版的耗时大约按 V²·E 增长：从 30-30-10 到 60-60-20，V 翻倍、E 翻四倍，耗时变成约 16 倍。原因是同一个节点会被重复入队约 V² 次，每次出队都要把所有边扫一遍。</li>
+<li>新版 <code>run()</code> 的耗时和 V+E 成正比。每次跑的数字会有波动（同一个测试两次分别是 0.10 ms 和 0.24 ms），量级不会变。</li>
+<li>连线时的环检测是一次 BFS，O(V+E)，每次连线只做一次，交互时可以忽略。</li>
+</ul>
+<h3 id="55-没有验证到的">5.5 没有验证到的</h3>
+<ul>
+<li>测试里的鼠标是合成事件，在 offscreen 平台下运行，<strong>我没有在你的桌面上真的用鼠标点过</strong>，建议你在 Qt Creator 里实际点一遍。</li>
+<li>只在 Qt 6.1.3 MinGW 64-bit 上编译过。代码用了 Qt 6 的接口（<code>QMouseEvent::position()</code>、<code>QStringConverter</code>），Qt 5 编译不了，<code>.pro</code> 里加了版本检查。</li>
+</ul>
+<hr />
+<h2 id="6-怎么编译运行测试">6. 怎么编译、运行、测试</h2>
+<h3 id="qt-creator">Qt Creator</h3>
+<ol>
+<li>打开 <code>E:\Claude code\ann-qt\ANN.pro</code>，第一次打开会让你选 Kit，选 <strong>Desktop Qt 6.1.3 MinGW 64-bit</strong>；</li>
+<li>运行：Ctrl+R；</li>
+<li>跑测试：再打开 <code>tests\tst_ann.pro</code> 运行，结果显示在“应用程序输出”面板，最后几行 <code>Totals: … 0 failed</code> 就是全部通过。</li>
+</ol>
+<h3 id="命令行powershell在-eclaude-codeann-qt-目录下">命令行（PowerShell，在 <code>E:\Claude code\ann-qt</code> 目录下）</h3>
+<pre><code class="language-powershell">$env:PATH = &quot;D:\Qt\6.1.3\mingw81_64\bin;D:\Qt\Tools\mingw810_64\bin;&quot; + $env:PATH
+</code></pre>
+<ul>
+<li>只对当前这个 PowerShell 窗口生效：把 Qt 的工具（<code>qmake</code>、运行时 DLL）和 MinGW 编译器放到 PATH 最前面，关掉窗口就失效，不改系统设置。</li>
+</ul>
+<pre><code class="language-powershell">qmake -o build\Makefile ANN.pro -spec win32-g++ &quot;CONFIG+=release&quot;
+</code></pre>
+<ul>
+<li><code>qmake</code>：读 <code>.pro</code> 文件，生成 Makefile；</li>
+<li><code>-o build\Makefile</code>：Makefile 写到 <code>build</code> 目录，编译产物不和源码混在一起（影子构建）；</li>
+<li><code>-spec win32-g++</code>：目标是 Windows + g++（MinGW）；</li>
+<li><code>&quot;CONFIG+=release&quot;</code>：只编 release 版。</li>
+</ul>
+<pre><code class="language-powershell">mingw32-make -C build -j8
+</code></pre>
+<ul>
+<li><code>mingw32-make</code>：MinGW 版的 make，按 Makefile 编译、链接；</li>
+<li><code>-C build</code>：先进到 <code>build</code> 目录再执行；</li>
+<li><code>-j8</code>：最多 8 个编译任务同时进行。</li>
+<li>注意：<strong>不要在 Git Bash 里执行这一步</strong>。Git Bash 的 <code>sh.exe</code> 在 PATH 里时，make 会用它来执行命令，而 qmake 生成的 Makefile 写的是 cmd 语法。请用 PowerShell 或 cmd。</li>
+</ul>
+<pre><code class="language-powershell">.\build\release\ANN.exe
+</code></pre>
+<ul>
+<li>能直接运行，是因为上面已经把 Qt 的 DLL 目录加进了 PATH。想双击运行，或者拷到别的电脑上，先执行 <code>windeployqt build\release\ANN.exe</code>：它会把程序依赖的 Qt DLL 和平台插件拷到 exe 旁边。</li>
+</ul>
+<p><strong>跑测试：</strong></p>
+<pre><code class="language-powershell">qmake -o tests\build\Makefile tests\tst_ann.pro -spec win32-g++ &quot;CONFIG+=release&quot;
+mingw32-make -C tests\build -j8
+$env:QT_QPA_PLATFORM = &quot;offscreen&quot;
+$env:QT_QPA_FONTDIR = &quot;C:\Windows\Fonts&quot;
+.\tests\build\release\tst_ann.exe
+</code></pre>
+<ul>
+<li>前两行和上面一样，只是换成测试工程；</li>
+<li><code>QT_QPA_PLATFORM=offscreen</code>：QPA（Qt Platform Abstraction，Qt 平台抽象层）选 offscreen，窗口只在内存里画，不弹出来；不设也能跑，只是会闪过几个窗口；</li>
+<li><code>QT_QPA_FONTDIR</code>：offscreen 平台不会自己去找系统字体，不设的话截图里没有字（测试结果不受影响）；</li>
+<li>可选 <code>$env:ANN_SHOTS = &quot;某个目录&quot;</code>：顺便把“修改后”的截图存到那里；</li>
+<li>如果是在没有控制台的环境里运行（比如被别的程序调用、输出被重定向），Qt Test 会把结果写到调试输出而不是屏幕，加 <code>$env:QT_FORCE_STDERR_LOGGING = &quot;1&quot;</code> 就能打印出来。这次我在工具环境里就遇到了这种情况。</li>
+</ul>
+<p><strong>重跑原版复现程序（可选）：</strong></p>
+<pre><code class="language-powershell">git archive -o docs/repro/orig.tar 4ffc9e2
+mkdir docs/repro/orig
+tar -xf docs/repro/orig.tar -C docs/repro/orig
+qmake -o docs\repro\build\Makefile docs\repro\repro_original.pro -spec win32-g++ &quot;CONFIG+=release&quot;
+mingw32-make -C docs\repro\build -j8
+.\docs\repro\build\release\repro_original.exe docs\repro\out
+</code></pre>
+<ul>
+<li><code>git archive -o docs/repro/orig.tar 4ffc9e2</code>：把 <code>4ffc9e2</code> 这个提交里的全部文件（也就是原版）打包成一个 tar 文件，不影响当前的工作区；</li>
+<li><code>tar -xf … -C docs/repro/orig</code>：<code>-x</code> 解包，<code>-f</code> 指定包文件，<code>-C</code> 解到哪个目录。Windows 10 自带 <code>tar</code>。这里分成两步，而不是用管道 <code>git archive 4ffc9e2 | tar -x</code>，是因为 PowerShell 5.1 的管道会把二进制数据当文本处理，包会坏掉；</li>
+<li>最后一行的参数是输出目录，<code>repro_report.txt</code> 和截图会写到那里。<code>docs/repro/orig/</code> 和 <code>orig.tar</code> 已经写进 <code>.gitignore</code>。</li>
+</ul>
+<hr />
+<h2 id="7-新版怎么操作">7. 新版怎么操作</h2>
+<table>
+<thead>
+<tr>
+<th>想做什么</th>
+<th>怎么做</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>加神经元</td>
+<td>菜单“新建” → 输入 / 隐层 / 输出神经元（自动排在各自那一列的空位上）</td>
+</tr>
+<tr>
+<td>移动</td>
+<td>左键按住拖动</td>
+</tr>
+<tr>
+<td>连线</td>
+<td>右键在起点神经元上按下，拖到终点神经元上松开（拖动时有虚线预览）。不合法的连线会被拒绝，状态栏说明原因</td>
+</tr>
+<tr>
+<td>设置初值 / 阈值和激活函数 / 权值</td>
+<td>双击输入神经元 / 隐层神经元 / 线（或线上的权值标签）。对话框里是当前值，点“取消”不做任何修改</td>
+</tr>
+<tr>
+<td>删除</td>
+<td>菜单“删除” → 删除点 / 删除线，再点要删的对象（会高亮）。删一个后自动退出；Esc 或右键取消</td>
+</tr>
+<tr>
+<td>计算</td>
+<td>菜单“运行”，状态栏显示计算顺序（拓扑序）</td>
+</tr>
+<tr>
+<td>导出</td>
+<td>菜单“导出数据” → 输出 txt，选择保存位置</td>
+</tr>
+<tr>
+<td>清空</td>
+<td>菜单“清空”，会先确认</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-没做的可以接着做的">8. 没做的、可以接着做的</h2>
+<ul>
+<li><strong>网络不能保存和读取</strong>（原版也没有）：可以用 <code>QJsonDocument</code> 存成 JSON。</li>
+<li><strong>没有撤销 / 重做</strong>：可以用 <code>QUndoStack</code>。</li>
+<li><strong>不能训练，只能做前向计算</strong>：要做 BP（Back Propagation，反向传播）算是新功能，不属于修 bug。</li>
+<li><strong>画布不能滚动、缩放</strong>：网络大了会放不下。</li>
+<li><strong>git</strong>：所有改动都在 <code>E:\Claude code\ann-qt</code> 的工作区里，<strong>没有提交</strong>，HEAD 还是 2021 年的原版，<code>git diff</code> 能看到全部改动。<code>ANN.pro.user</code>（Qt Creator 的本机配置，里面写死了旧的构建目录）从副本里删掉了，<code>git status</code> 里会显示为删除；<code>.gitignore</code> 里补上了它和构建目录。</li>
+<li>原来的 <code>Documents\ANN</code> 没动，包括那个被覆盖了的 <code>dialog.ui</code>。</li>
+</ul>
+</main>
+</body>
+</html>

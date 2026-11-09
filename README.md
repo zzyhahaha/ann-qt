@@ -1,37 +1,25 @@
-# ANN
+# ANN 神经元模拟器（Qt 6）
 
-#### 介绍
-ANN数据课设
+用 Qt 写的人工神经网络（ANN，Artificial Neural Network）可视化小程序：在画布上摆放输入 / 隐层 / 输出神经元，右键拖动连线，双击设置初值、阈值、激活函数和权值，点“运行”按拓扑序做一次前向计算，结果可以导出成 txt。
 
-#### 软件架构
-软件架构说明
+原来是数据结构课程设计。2026-11 修了一批 bug（删除、拓扑排序、对话框、重绘等），并做了重构，详见 [docs/修改记录.md](docs/修改记录.md)。
 
+## 编译运行
 
-#### 安装教程
+- Qt Creator：打开 `ANN.pro`，Kit 选 **Desktop Qt 6.1.3 MinGW 64-bit**，按 Ctrl+R 运行。
+- 命令行：见《修改记录》第 6 节。需要 Qt 6，Qt 5 不行。
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## 测试
 
-#### 使用说明
+打开 `tests/tst_ann.pro` 运行，一共 41 个用例：模型、画布交互、对话框各一组，原版的每条 bug 都有对应的回归测试。
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## 目录
 
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
-
-
-#### 特技
-
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+| 路径 | 内容 |
+|---|---|
+| `network.h / .cpp` | 数据模型：神经元、连线、连线规则、Kahn 拓扑排序 + 前向计算、导出文本 |
+| `networkcanvas.h / .cpp` | 画布：绘制，拖动 / 连线 / 删除 / 双击等鼠标交互 |
+| `mainwindow.*` | 菜单、对话框、导出 |
+| `dialog*.*`、`numberedit.h` | 三个参数对话框：隐层神经元、权值、初值 |
+| `tests/` | Qt Test 自动化测试 |
+| `docs/` | 修改记录、前后对比截图、原版 bug 的复现程序 |
