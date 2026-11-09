@@ -973,7 +973,7 @@ mingw32-make -C docs\repro\build -j8
 <li><strong>没有撤销 / 重做</strong>：可以用 <code>QUndoStack</code>。</li>
 <li><strong>不能训练，只能做前向计算</strong>：要做 BP（Back Propagation，反向传播）算是新功能，不属于修 bug。</li>
 <li><strong>画布不能滚动、缩放</strong>：网络大了会放不下。</li>
-<li><strong>git</strong>：所有改动都在 <code>E:\Claude code\ann-qt</code> 的工作区里，<strong>没有提交</strong>，HEAD 还是 2021 年的原版，<code>git diff</code> 能看到全部改动。<code>ANN.pro.user</code>（Qt Creator 的本机配置，里面写死了旧的构建目录）从副本里删掉了，<code>git status</code> 里会显示为删除；<code>.gitignore</code> 里补上了它和构建目录。</li>
+<li><strong>git</strong>：改动在分支 <code>refactor-2026-11</code> 上，分成代码、测试、文档几个提交，接在原版 <code>4ffc9e2</code> 之后；本地的 <code>master</code> 仍是 2021 年的原版。已推到 GitHub 仓库 <code>zzyhahaha/ann-qt</code> 的 <code>main</code> 分支，没有推到 Gitee。<code>git diff 4ffc9e2</code> 能看到全部改动。<code>ANN.pro.user</code>（Qt Creator 的本机配置，里面写死了旧的构建目录）已删除，<code>.gitignore</code> 里补上了它和构建目录。</li>
 <li>原来的 <code>Documents\ANN</code> 没动，包括那个被覆盖了的 <code>dialog.ui</code>。</li>
 </ul>
 </main>
